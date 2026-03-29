@@ -1,0 +1,20 @@
+{
+  "name": "quality-portal-api",
+  "version": "1.0.0",
+  "description": "Backend API for Quality Portal - PostgreSQL integration",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["quality", "sonarqube", "zap", "wazuh", "postgresql"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.12.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  }
+}

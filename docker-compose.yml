@@ -1,0 +1,144 @@
+version: '3.9'
+
+services:
+  # ================================
+  # Service PostgreSQL
+  # ================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: quality-portal-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-quality_portal}
+      POSTGRES_USER: ${POSTGRES_USER:-quality_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      # Persister les données
+      - postgres_data:/var/lib/postgresql/data
+      # Script d'initialisation
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - quality-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-quality_user} -d ${POSTGRES_DB:-quality_portal}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ================================
+  # Service API Backend (Node.js)
+  # ================================
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: quality-portal-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_PORT: 3001
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-quality_portal}
+      POSTGRES_USER: ${POSTGRES_USER:-quality_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+    ports:
+      - "${API_PORT:-3001}:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - quality-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # ================================
+  # Service Application Web
+  # ================================
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quality-portal-web
+    restart: unless-stopped
+    environment:
+      # Configuration base de données
+      DATABASE_ENABLED: "true"
+      DATABASE_TYPE: "postgresql"
+      POSTGRES_HOST: api
+      POSTGRES_PORT: 3001
+      POSTGRES_DB: ${POSTGRES_DB:-quality_portal}
+      POSTGRES_USER: ${POSTGRES_USER:-quality_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+      
+      # Configuration APIs externes (optionnel)
+      SONARQUBE_URL: ${SONARQUBE_URL:-}
+      SONARQUBE_TOKEN: ${SONARQUBE_TOKEN:-}
+      ZAP_URL: ${ZAP_URL:-}
+      ZAP_API_KEY: ${ZAP_API_KEY:-}
+      WAZUH_URL: ${WAZUH_URL:-}
+      WAZUH_USER: ${WAZUH_USER:-}
+      WAZUH_PASSWORD: ${WAZUH_PASSWORD:-}
+      
+      # Configuration Node
+      NODE_ENV: production
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - quality-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # ================================
+  # Service pgAdmin (optionnel)
+  # ================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: quality-portal-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@quality-portal.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      - postgres
+    networks:
+      - quality-network
+    profiles:
+      - admin  # Activé seulement avec --profile admin
+
+# ================================
+# Volumes persistants
+# ================================
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+# ================================
+# Réseau interne
+# ================================
+networks:
+  quality-network:
+    driver: bridge
