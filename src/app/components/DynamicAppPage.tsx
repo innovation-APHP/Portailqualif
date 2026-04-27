@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Application } from "../types/application";
 import { ApplicationsService } from "../services/applications.service";
 import { AlertCircle, ExternalLink, Settings } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 
@@ -11,7 +10,8 @@ import { Button } from "./ui/button";
  * Page générique pour afficher une application dynamique
  */
 export function DynamicAppPage() {
-  const { appId } = useParams<{ appId: string }>();
+  const params = useParams();
+  const appId = params.appId;
   const [app, setApp] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
 

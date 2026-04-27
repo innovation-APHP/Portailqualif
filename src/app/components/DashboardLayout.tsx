@@ -16,7 +16,7 @@ export function DashboardLayout() {
 
   const getIconComponent = (iconName: string) => {
     const Icon = (LucideIcons as any)[iconName];
-    return Icon || LucideIcons.Box;
+    return Icon || LucideIcons.Package;
   };
 
   const navigation = [

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Application, AppConfigField, PREDEFINED_APPS } from "../types/application";
+import { Application, PREDEFINED_APPS } from "../types/application";
 import { useApplications } from "../hooks/useApplications";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -9,7 +9,7 @@ import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Trash2, Edit, Plus, ExternalLink, Check, X, GripVertical } from "lucide-react";
+import { Trash2, Edit, Plus, ExternalLink, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import * as LucideIcons from "lucide-react";
 
@@ -82,7 +82,7 @@ export function ApplicationManager() {
 
   const getIconComponent = (iconName: string) => {
     const Icon = (LucideIcons as any)[iconName];
-    return Icon || LucideIcons.Box;
+    return Icon || LucideIcons.Package;
   };
 
   const isConfigured = (app: Application) => {
