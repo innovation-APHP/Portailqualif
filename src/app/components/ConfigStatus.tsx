@@ -1,5 +1,5 @@
 import { AlertCircle, CheckCircle, ExternalLink, Settings } from "lucide-react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { useApiConfig } from "../hooks/useApiConfig";
 
 interface ConfigStatusProps {

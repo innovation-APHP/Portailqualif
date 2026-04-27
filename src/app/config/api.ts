@@ -17,13 +17,6 @@ export const API_CONFIG: ApiConfig = {
     baseUrl: process.env.ZAP_URL || "http://localhost:8080",
     apiKey: process.env.ZAP_API_KEY || "YOUR_ZAP_API_KEY_HERE",
   },
-
-  // Wazuh Configuration
-  wazuh: {
-    baseUrl: process.env.WAZUH_URL || "https://wazuh.example.com",
-    username: process.env.WAZUH_USER || "admin",
-    password: process.env.WAZUH_PASSWORD || "YOUR_WAZUH_PASSWORD_HERE",
-  },
 };
 
 /**
@@ -46,6 +39,3 @@ export function getApiConfig(): ApiConfig {
 // SONARQUBE_TOKEN=votre_token
 // ZAP_URL=http://votre-zap:8080
 // ZAP_API_KEY=votre_api_key
-// WAZUH_URL=https://votre-wazuh.com
-// WAZUH_USER=votre_username
-// WAZUH_PASSWORD=votre_password

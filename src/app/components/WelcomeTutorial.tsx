@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, ArrowRight, Settings, ExternalLink, CheckCircle } from "lucide-react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 
 export function WelcomeTutorial() {
   const [isVisible, setIsVisible] = useState(false);
@@ -31,7 +31,7 @@ export function WelcomeTutorial() {
     {
       title: "Bienvenue sur le Portail Qualité !",
       description:
-        "Ce portail centralise les données de SonarQube, OWASP ZAP et Wazuh pour surveiller la qualité et la sécurité de vos applications.",
+        "Ce portail centralise les données de vos outils de qualité et de sécurité pour surveiller vos applications. Vous pouvez ajouter et configurer dynamiquement vos outils préférés.",
       icon: CheckCircle,
       color: "blue",
     },
@@ -43,9 +43,9 @@ export function WelcomeTutorial() {
       color: "green",
     },
     {
-      title: "Configurez vos APIs",
+      title: "Gérez vos applications",
       description:
-        "Pour afficher vos vraies données, allez dans Paramètres et configurez les URLs et identifiants de vos outils.",
+        "Dans Paramètres, vous pouvez ajouter, supprimer et configurer les applications de votre choix (SonarQube, ZAP, Allure Report, etc.).",
       icon: Settings,
       color: "orange",
     },

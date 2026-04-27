@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { AlertTriangle, Home } from "lucide-react";
 
 export function NotFound() {
@@ -22,10 +22,10 @@ export function NotFound() {
             Retour à l&apos;accueil
           </Link>
           <Link
-            to="/sonarqube"
+            to="/settings"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
           >
-            Voir SonarQube
+            Paramètres
           </Link>
         </div>
         <div className="mt-8 text-sm text-gray-500">
@@ -35,16 +35,8 @@ export function NotFound() {
               Accueil
             </Link>
             <span>•</span>
-            <Link to="/sonarqube" className="text-blue-600 hover:underline">
-              SonarQube
-            </Link>
-            <span>•</span>
-            <Link to="/zap" className="text-blue-600 hover:underline">
-              OWASP ZAP
-            </Link>
-            <span>•</span>
-            <Link to="/wazuh" className="text-blue-600 hover:underline">
-              Wazuh
+            <Link to="/settings" className="text-blue-600 hover:underline">
+              Paramètres
             </Link>
           </div>
         </div>

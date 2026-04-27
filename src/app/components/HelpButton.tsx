@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { HelpCircle, X, FileText, Settings, ExternalLink, Book } from "lucide-react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 
 export function HelpButton() {
   const [isOpen, setIsOpen] = useState(false);

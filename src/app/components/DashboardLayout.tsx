@@ -1,44 +1,33 @@
-import { Outlet, Link, useLocation } from "react-router";
-import {
-  LayoutDashboard,
-  Code2,
-  Shield,
-  Eye,
-  Settings,
-  Menu,
-  ExternalLink,
-} from "lucide-react";
+import { Outlet, Link, useLocation } from "react-router-dom";
+import { LayoutDashboard, Settings, Menu, ExternalLink } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { useState } from "react";
 import { cn } from "./ui/utils";
-import { useApiConfig } from "../hooks/useApiConfig";
 import { HelpButton } from "./HelpButton";
 import { WelcomeTutorial } from "./WelcomeTutorial";
 import { DatabaseStatusBadge } from "./DatabaseStatusBadge";
-
-const navigation = [
-  { name: "Vue d'ensemble", href: "/", icon: LayoutDashboard },
-  { name: "SonarQube", href: "/sonarqube", icon: Code2, externalLinkKey: "sonarqube" as const },
-  { name: "OWASP ZAP", href: "/zap", icon: Shield, externalLinkKey: "zap" as const },
-  { name: "Wazuh", href: "/wazuh", icon: Eye, externalLinkKey: "wazuh" as const },
-];
+import { useApplications } from "../hooks/useApplications";
+import { ApplicationsService } from "../services/applications.service";
 
 export function DashboardLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { config } = useApiConfig();
+  const { enabledApplications } = useApplications();
 
-  const getExternalUrl = (key: "sonarqube" | "zap" | "wazuh") => {
-    const url = config[key].baseUrl;
-    // Ne pas afficher le lien si c'est l'URL par défaut
-    if (
-      url === "https://sonarqube.example.com" ||
-      url === "http://localhost:8080" ||
-      url === "https://wazuh.example.com"
-    ) {
-      return null;
-    }
-    return url;
+  const getIconComponent = (iconName: string) => {
+    const Icon = (LucideIcons as any)[iconName];
+    return Icon || LucideIcons.Box;
   };
+
+  const navigation = [
+    { name: "Vue d'ensemble", href: "/", icon: LayoutDashboard },
+    ...enabledApplications.map((app) => ({
+      name: app.name,
+      href: `/app/${app.id}`,
+      icon: getIconComponent(app.icon),
+      externalUrl: ApplicationsService.isConfigured(app) ? app.config.baseUrl : null,
+    })),
+  ];
 
   return (
     <>
@@ -75,7 +64,6 @@ export function DashboardLayout() {
                   location.pathname === item.href ||
                   (item.href !== "/" && location.pathname.startsWith(item.href));
                 const Icon = item.icon;
-                const externalUrl = item.externalLinkKey ? getExternalUrl(item.externalLinkKey) : null;
 
                 return (
                   <div key={item.name}>
@@ -84,17 +72,15 @@ export function DashboardLayout() {
                       onClick={() => setSidebarOpen(false)}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
-                        isActive
-                          ? "bg-blue-50 text-blue-700"
-                          : "text-gray-700 hover:bg-gray-100"
+                        isActive ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
                       )}
                     >
                       <Icon className="w-5 h-5" />
                       <span className="font-medium flex-1">{item.name}</span>
                     </Link>
-                    {externalUrl && isActive && (
+                    {item.externalUrl && isActive && (
                       <a
-                        href={externalUrl}
+                        href={item.externalUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 px-3 py-1.5 ml-8 mt-1 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"

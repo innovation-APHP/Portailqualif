@@ -10,11 +10,6 @@ export interface ApiConfig {
     baseUrl: string;
     apiKey: string;
   };
-  wazuh: {
-    baseUrl: string;
-    username: string;
-    password: string;
-  };
 }
 
 // Configuration par défaut
@@ -26,11 +21,6 @@ const DEFAULT_CONFIG: ApiConfig = {
   zap: {
     baseUrl: "http://localhost:8080",
     apiKey: "YOUR_ZAP_API_KEY_HERE",
-  },
-  wazuh: {
-    baseUrl: "https://wazuh.example.com",
-    username: "admin",
-    password: "YOUR_WAZUH_PASSWORD_HERE",
   },
 };
 
@@ -79,10 +69,6 @@ export function useApiConfig() {
         ...prev.zap,
         ...(newConfig.zap || {}),
       },
-      wazuh: {
-        ...prev.wazuh,
-        ...(newConfig.wazuh || {}),
-      },
     }));
   };
 
@@ -99,7 +85,7 @@ export function useApiConfig() {
    */
   const isConfigured = (service: keyof ApiConfig): boolean => {
     const serviceConfig = config[service];
-    
+
     switch (service) {
       case "sonarqube":
         return (
@@ -110,11 +96,6 @@ export function useApiConfig() {
         return (
           serviceConfig.baseUrl !== DEFAULT_CONFIG.zap.baseUrl &&
           serviceConfig.apiKey !== DEFAULT_CONFIG.zap.apiKey
-        );
-      case "wazuh":
-        return (
-          serviceConfig.baseUrl !== DEFAULT_CONFIG.wazuh.baseUrl &&
-          serviceConfig.password !== DEFAULT_CONFIG.wazuh.password
         );
       default:
         return false;
