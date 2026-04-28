@@ -10,15 +10,17 @@ import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Trash2, Edit, Plus, ExternalLink, Check, X } from "lucide-react";
+import { Trash2, Edit, Plus, ExternalLink, Check, X, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import * as LucideIcons from "lucide-react";
+import { CustomAppForm } from "./CustomAppForm";
 
 export function ApplicationManager() {
   const { applications, loading, toggleEnabled, updateConfig, deleteApplication, createApplication } = useApplications();
   const [editingApp, setEditingApp] = useState<Application | null>(null);
   const [configForm, setConfigForm] = useState<Record<string, string>>({});
   const [isCreating, setIsCreating] = useState(false);
+  const [isCreatingCustom, setIsCreatingCustom] = useState(false);
   const [newAppTemplate, setNewAppTemplate] = useState<string>("");
 
   const handleToggle = async (id: string) => {
@@ -81,6 +83,16 @@ export function ApplicationManager() {
     }
   };
 
+  const handleCreateCustomApp = async (app: Omit<Application, "id" | "createdAt" | "updatedAt">) => {
+    try {
+      await createApplication(app);
+      toast.success(`Application "${app.name}" créée avec succès`);
+      setIsCreatingCustom(false);
+    } catch (error) {
+      toast.error("Erreur lors de la création");
+    }
+  };
+
   const getIconComponent = (iconName: string) => {
     const Icon = (LucideIcons as any)[iconName];
     return Icon || LucideIcons.Package;
@@ -109,13 +121,19 @@ export function ApplicationManager() {
           </p>
         </div>
 
-        <Dialog open={isCreating} onOpenChange={setIsCreating}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Ajouter une application
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsCreatingCustom(true)}>
+            <Sparkles className="w-4 h-4 mr-2" />
+            Application personnalisée
+          </Button>
+
+          <Dialog open={isCreating} onOpenChange={setIsCreating}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Depuis template
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Ajouter une application</DialogTitle>
@@ -153,6 +171,7 @@ export function ApplicationManager() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -251,6 +270,13 @@ export function ApplicationManager() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de création personnalisée */}
+      <CustomAppForm
+        isOpen={isCreatingCustom}
+        onClose={() => setIsCreatingCustom(false)}
+        onSave={handleCreateCustomApp}
+      />
     </div>
   );
 }

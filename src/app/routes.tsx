@@ -5,6 +5,8 @@ import { SettingsPage } from "./components/SettingsPage";
 import { NotFound } from "./components/NotFound";
 import { DynamicAppPage } from "./components/DynamicAppPage";
 import { TestPage } from "./components/TestPage";
+import { AdminLogin } from "./components/AdminLogin";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Mode debug: décommentez cette ligne pour activer le mode test
 // const DEBUG_MODE = true;
@@ -37,9 +39,17 @@ export const router = DEBUG_MODE
           },
           {
             path: "settings",
-            element: <SettingsPage />
+            element: (
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            )
           },
         ],
+      },
+      {
+        path: "/admin/login",
+        element: <AdminLogin />
       },
       {
         path: "*",

@@ -1,7 +1,9 @@
 import { DatabaseConfigSection } from "./DatabaseConfigSection";
 import { ApplicationManager } from "./ApplicationManager";
+import { AdminPasswordManager } from "./AdminPasswordManager";
+import { DataMigration } from "./DataMigration";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Database, AppWindow } from "lucide-react";
+import { Database, AppWindow, Lock, ArrowRightLeft } from "lucide-react";
 
 export function SettingsPage() {
   return (
@@ -15,7 +17,7 @@ export function SettingsPage() {
         </div>
 
         <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:w-96">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:w-auto">
             <TabsTrigger value="applications" className="flex items-center gap-2">
               <AppWindow className="w-4 h-4" />
               Applications
@@ -23,6 +25,14 @@ export function SettingsPage() {
             <TabsTrigger value="database" className="flex items-center gap-2">
               <Database className="w-4 h-4" />
               Base de données
+            </TabsTrigger>
+            <TabsTrigger value="migration" className="flex items-center gap-2">
+              <ArrowRightLeft className="w-4 h-4" />
+              Migration
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Lock className="w-4 h-4" />
+              Sécurité
             </TabsTrigger>
           </TabsList>
 
@@ -32,6 +42,14 @@ export function SettingsPage() {
 
           <TabsContent value="database" className="space-y-4">
             <DatabaseConfigSection />
+          </TabsContent>
+
+          <TabsContent value="migration" className="space-y-4">
+            <DataMigration />
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-4">
+            <AdminPasswordManager />
           </TabsContent>
         </Tabs>
       </div>

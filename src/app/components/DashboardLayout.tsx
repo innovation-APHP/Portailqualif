@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Settings, Menu, ExternalLink } from "lucide-react";
+import { LayoutDashboard, Settings, Menu, ExternalLink, Lock, LogOut, Shield } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { useState } from "react";
 import { cn } from "./ui/utils";
@@ -8,11 +8,21 @@ import { WelcomeTutorial } from "./WelcomeTutorial";
 import { DatabaseStatusBadge } from "./DatabaseStatusBadge";
 import { useApplications } from "../hooks/useApplications";
 import { ApplicationsService } from "../services/applications.service";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { Badge } from "./ui/badge";
 
 export function DashboardLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { enabledApplications = [], loading } = useApplications();
+  const { isAdmin, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   const getIconComponent = (iconName: string) => {
     try {
@@ -107,23 +117,54 @@ export function DashboardLayout() {
               })}
 
               <div className="pt-4 mt-4 border-t border-gray-200">
-                <Link
-                  to="/settings"
-                  onClick={() => setSidebarOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
-                    location.pathname === "/settings"
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-700 hover:bg-gray-100"
-                  )}
-                >
-                  <Settings className="w-5 h-5" />
-                  <span className="font-medium">Paramètres</span>
-                </Link>
+                {isAdmin ? (
+                  <Link
+                    to="/settings"
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
+                      location.pathname === "/settings"
+                        ? "bg-blue-50 text-blue-700"
+                        : "text-gray-700 hover:bg-gray-100"
+                    )}
+                  >
+                    <Settings className="w-5 h-5" />
+                    <span className="font-medium">Paramètres</span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/admin/login"
+                    onClick={() => setSidebarOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-gray-700 hover:bg-gray-100"
+                  >
+                    <Lock className="w-5 h-5" />
+                    <span className="font-medium">Connexion Admin</span>
+                  </Link>
+                )}
               </div>
             </nav>
 
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-4 border-t border-gray-200 space-y-3">
+              {isAdmin && (
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-500">
+                    Connecté en tant que :
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      <Shield className="w-3 h-3 mr-1" />
+                      {currentUsername}
+                    </Badge>
+                    <button
+                      onClick={handleLogout}
+                      className="text-xs text-gray-600 hover:text-gray-900 flex items-center gap-1"
+                      title="Se déconnecter"
+                    >
+                      <LogOut className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="text-xs text-gray-500">
                 Dernière mise à jour: {new Date().toLocaleDateString("fr-FR")}
               </div>
@@ -152,7 +193,15 @@ export function DashboardLayout() {
                   )?.name || location.pathname === "/settings" ? "Paramètres" : "Portail Qualité"}
                 </h2>
               </div>
-              <DatabaseStatusBadge />
+              <div className="flex items-center gap-3">
+                {isAdmin && (
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 hidden lg:flex">
+                    <Shield className="w-3 h-3 mr-1" />
+                    Admin
+                  </Badge>
+                )}
+                <DatabaseStatusBadge />
+              </div>
             </div>
           </header>
 

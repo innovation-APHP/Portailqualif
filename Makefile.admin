@@ -1,0 +1,65 @@
+# Commandes de gestion administrateur - Portail Qualité
+
+.DEFAULT_GOAL := help
+
+.PHONY: help
+help: ## Afficher l'aide
+	@echo "=========================================="
+	@echo "  PORTAIL QUALITÉ - GESTION ADMIN"
+	@echo "=========================================="
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo ""
+
+.PHONY: reset-admin
+reset-admin: ## Réinitialiser les identifiants administrateur
+	@./docker/reset-admin.sh
+
+.PHONY: admin-info
+admin-info: ## Afficher les informations sur l'accès administrateur
+	@echo "=========================================="
+	@echo "  INFORMATIONS ADMINISTRATEUR"
+	@echo "=========================================="
+	@echo ""
+	@echo "📍 Stockage : localStorage du navigateur"
+	@echo ""
+	@echo "🔑 Identifiants par défaut :"
+	@echo "   Username: admin"
+	@echo "   Password: admin123"
+	@echo ""
+	@echo "🔄 Pour réinitialiser :"
+	@echo "   make -f Makefile.admin reset-admin"
+	@echo ""
+	@echo "📖 Documentation complète :"
+	@echo "   cat STORAGE_AND_RESET.md"
+	@echo ""
+
+.PHONY: show-storage
+show-storage: ## Afficher les clés de stockage localStorage
+	@echo "=========================================="
+	@echo "  CLÉS DE STOCKAGE LOCALSTORAGE"
+	@echo "=========================================="
+	@echo ""
+	@echo "Ouvrez la console du navigateur (F12) et exécutez :"
+	@echo ""
+	@echo "// Voir tous les identifiants"
+	@echo "Object.keys(localStorage).filter(k => k.includes('quality_portal')).forEach(key => {"
+	@echo "    console.log(key + ':', localStorage.getItem(key));"
+	@echo "});"
+	@echo ""
+
+.PHONY: reset-all
+reset-all: ## Commandes pour réinitialisation complète (console navigateur)
+	@echo "=========================================="
+	@echo "  RÉINITIALISATION COMPLÈTE"
+	@echo "=========================================="
+	@echo ""
+	@echo "⚠️  ATTENTION : Supprime TOUTES les données !"
+	@echo ""
+	@echo "Ouvrez la console du navigateur (F12) et exécutez :"
+	@echo ""
+	@echo "Object.keys(localStorage).filter(k => k.includes('quality_portal')).forEach(key => {"
+	@echo "    localStorage.removeItem(key);"
+	@echo "});"
+	@echo "location.reload();"
+	@echo ""

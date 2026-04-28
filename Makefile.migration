@@ -1,0 +1,190 @@
+# =====================================================
+# Makefile - Commandes de Migration
+# Portail Qualité - PostgreSQL
+# =====================================================
+
+.PHONY: help migration-init migration-status migration-test migration-clean migration-export migration-backup
+
+# Variables
+POSTGRES_HOST ?= localhost
+POSTGRES_PORT ?= 5432
+POSTGRES_DB ?= quality_portal
+POSTGRES_USER ?= postgres
+
+# Couleurs
+GREEN  := \033[0;32m
+YELLOW := \033[1;33m
+BLUE   := \033[0;34m
+NC     := \033[0m
+
+# =====================================================
+# Aide
+# =====================================================
+
+help: ## Afficher cette aide
+	@echo "$(BLUE)========================================$(NC)"
+	@echo "$(BLUE)  Commandes de Migration PostgreSQL$(NC)"
+	@echo "$(BLUE)========================================$(NC)"
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-25s$(NC) %s\n", $$1, $$2}'
+	@echo ""
+
+# =====================================================
+# Initialisation
+# =====================================================
+
+migration-init: ## Initialiser la base de données (interactif)
+	@echo "$(BLUE)→$(NC) Initialisation de la base de données..."
+	@cd database && ./init-migration.sh
+
+migration-init-auto: ## Initialisation automatique (non-interactif)
+	@echo "$(BLUE)→$(NC) Création de la base de données..."
+	@PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d postgres -c "CREATE DATABASE $(POSTGRES_DB);" 2>/dev/null || true
+	@echo "$(BLUE)→$(NC) Application du schéma..."
+	@PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d $(POSTGRES_DB) -f database/schema.sql
+	@echo "$(GREEN)✓$(NC) Initialisation terminée"
+
+# =====================================================
+# Tests et Vérifications
+# =====================================================
+
+migration-test: ## Tester la connexion PostgreSQL
+	@echo "$(BLUE)→$(NC) Test de connexion à PostgreSQL..."
+	@PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d postgres -c '\q' && \
+		echo "$(GREEN)✓$(NC) Connexion réussie" || \
+		echo "$(YELLOW)✗$(NC) Connexion échouée"
+
+migration-status: ## Afficher les statistiques de la base
+	@echo "$(BLUE)→$(NC) Statistiques de la base de données..."
+	@PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\
+		SELECT \
+			'admin_credentials' as table_name, \
+			COUNT(*) as count \
+		FROM admin_credentials \
+		UNION ALL \
+		SELECT 'applications', COUNT(*) FROM applications \
+		UNION ALL \
+		SELECT 'application_config_fields', COUNT(*) FROM application_config_fields \
+		UNION ALL \
+		SELECT 'application_config', COUNT(*) FROM application_config;"
+
+migration-tables: ## Lister toutes les tables
+	@echo "$(BLUE)→$(NC) Tables de la base de données..."
+	@PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\dt"
+
+migration-schema: ## Afficher le schéma complet
+	@echo "$(BLUE)→$(NC) Schéma de la base de données..."
+	@PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\d+"
+
+# =====================================================
+# Sauvegarde et Export
+# =====================================================
+
+migration-backup: ## Sauvegarder la base en SQL
+	@echo "$(BLUE)→$(NC) Sauvegarde de la base de données..."
+	@mkdir -p backups
+	@PGPASSWORD=$(POSTGRES_PASSWORD) pg_dump -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) $(POSTGRES_DB) > backups/quality_portal_$(shell date +%Y%m%d_%H%M%S).sql
+	@echo "$(GREEN)✓$(NC) Sauvegarde créée dans backups/"
+
+migration-export: ## Exporter les données via l'API
+	@echo "$(BLUE)→$(NC) Export des données via API..."
+	@curl -s http://localhost:5000/api/migration/export | jq '.' > backups/export_$(shell date +%Y%m%d_%H%M%S).json
+	@echo "$(GREEN)✓$(NC) Export créé dans backups/"
+
+migration-restore: ## Restaurer depuis une sauvegarde SQL
+	@echo "$(BLUE)→$(NC) Restauration de la base de données..."
+	@read -p "Fichier de sauvegarde : " backup_file; \
+	PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d $(POSTGRES_DB) -f $$backup_file
+	@echo "$(GREEN)✓$(NC) Restauration terminée"
+
+# =====================================================
+# Nettoyage
+# =====================================================
+
+migration-clean: ## Supprimer toutes les données (garde le schéma)
+	@echo "$(YELLOW)⚠$(NC)  Attention : Cette action va supprimer toutes les données !"
+	@read -p "Êtes-vous sûr ? (y/N) " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\
+			TRUNCATE admin_credentials, applications, application_config_fields, application_config CASCADE;"; \
+		echo "$(GREEN)✓$(NC) Données supprimées"; \
+	else \
+		echo "$(BLUE)→$(NC) Annulé"; \
+	fi
+
+migration-reset: ## Supprimer et recréer la base complète
+	@echo "$(YELLOW)⚠$(NC)  Attention : Cette action va supprimer toute la base !"
+	@read -p "Êtes-vous sûr ? (y/N) " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d postgres -c "DROP DATABASE IF EXISTS $(POSTGRES_DB);"; \
+		PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d postgres -c "CREATE DATABASE $(POSTGRES_DB);"; \
+		PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d $(POSTGRES_DB) -f database/schema.sql; \
+		echo "$(GREEN)✓$(NC) Base réinitialisée"; \
+	else \
+		echo "$(BLUE)→$(NC) Annulé"; \
+	fi
+
+# =====================================================
+# Requêtes utiles
+# =====================================================
+
+migration-apps: ## Lister toutes les applications
+	@PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\
+		SELECT id, name, enabled, connection_type FROM applications ORDER BY name;"
+
+migration-config: ## Afficher toute la configuration
+	@PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\
+		SELECT \
+			a.name as application, \
+			ac.config_key, \
+			ac.config_value, \
+			ac.is_sensitive \
+		FROM applications a \
+		JOIN application_config ac ON a.id = ac.application_id \
+		ORDER BY a.name, ac.config_key;"
+
+migration-admin: ## Afficher les credentials admin
+	@PGPASSWORD=$(POSTGRES_PASSWORD) psql -h $(POSTGRES_HOST) -p $(POSTGRES_PORT) -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\
+		SELECT username, created_at, updated_at FROM admin_credentials;"
+
+# =====================================================
+# Docker
+# =====================================================
+
+migration-docker-start: ## Démarrer PostgreSQL via Docker
+	@docker-compose up -d postgres
+	@echo "$(GREEN)✓$(NC) PostgreSQL démarré"
+
+migration-docker-stop: ## Arrêter PostgreSQL
+	@docker-compose stop postgres
+	@echo "$(GREEN)✓$(NC) PostgreSQL arrêté"
+
+migration-docker-logs: ## Voir les logs PostgreSQL
+	@docker-compose logs -f postgres
+
+migration-docker-shell: ## Accéder au shell psql dans Docker
+	@docker-compose exec postgres psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
+
+# =====================================================
+# Utilitaires
+# =====================================================
+
+migration-check-deps: ## Vérifier les dépendances installées
+	@echo "$(BLUE)→$(NC) Vérification des dépendances..."
+	@command -v psql >/dev/null 2>&1 && echo "$(GREEN)✓$(NC) psql installé" || echo "$(YELLOW)✗$(NC) psql manquant"
+	@command -v pg_dump >/dev/null 2>&1 && echo "$(GREEN)✓$(NC) pg_dump installé" || echo "$(YELLOW)✗$(NC) pg_dump manquant"
+	@command -v docker >/dev/null 2>&1 && echo "$(GREEN)✓$(NC) docker installé" || echo "$(YELLOW)✗$(NC) docker manquant"
+	@command -v jq >/dev/null 2>&1 && echo "$(GREEN)✓$(NC) jq installé" || echo "$(YELLOW)✗$(NC) jq manquant (optionnel)"
+
+migration-info: ## Afficher les informations de configuration
+	@echo "$(BLUE)========================================$(NC)"
+	@echo "$(BLUE)  Configuration PostgreSQL$(NC)"
+	@echo "$(BLUE)========================================$(NC)"
+	@echo "  Host     : $(POSTGRES_HOST)"
+	@echo "  Port     : $(POSTGRES_PORT)"
+	@echo "  Database : $(POSTGRES_DB)"
+	@echo "  User     : $(POSTGRES_USER)"
+	@echo ""
+
+# Par défaut
+.DEFAULT_GOAL := help
