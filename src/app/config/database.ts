@@ -11,8 +11,8 @@ export interface DatabaseConfig {
 // Configuration par défaut : mode frontend-only
 export const DATABASE_CONFIG: DatabaseConfig = {
   enabled: false,
-  supabaseUrl: process.env.SUPABASE_URL || undefined,
-  supabaseAnonKey: process.env.SUPABASE_ANON_KEY || undefined,
+  supabaseUrl: undefined,
+  supabaseAnonKey: undefined,
 };
 
 /**

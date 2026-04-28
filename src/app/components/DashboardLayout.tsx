@@ -12,19 +12,30 @@ import { ApplicationsService } from "../services/applications.service";
 export function DashboardLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { enabledApplications, loading } = useApplications();
+  const { enabledApplications = [], loading } = useApplications();
 
   const getIconComponent = (iconName: string) => {
-    const Icon = (LucideIcons as any)[iconName];
-    return Icon || LucideIcons.Package;
+    try {
+      const Icon = (LucideIcons as any)[iconName];
+      return Icon || LucideIcons.Package;
+    } catch {
+      return LucideIcons.Package;
+    }
   };
 
-  const appNavItems = loading ? [] : (enabledApplications || []).map((app) => ({
-    name: app.name,
-    href: `/app/${app.id}`,
-    icon: getIconComponent(app.icon),
-    externalUrl: ApplicationsService.isConfigured(app) ? app.config.baseUrl : null,
-  }));
+  const appNavItems = loading ? [] : enabledApplications.map((app) => {
+    try {
+      return {
+        name: app.name,
+        href: `/app/${app.id}`,
+        icon: getIconComponent(app.icon),
+        externalUrl: ApplicationsService.isConfigured(app) ? app.config.baseUrl : null,
+      };
+    } catch (error) {
+      console.error("Error mapping app:", app, error);
+      return null;
+    }
+  }).filter(Boolean);
 
   const navigation = [
     { name: "Vue d'ensemble", href: "/", icon: LayoutDashboard },

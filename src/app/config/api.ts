@@ -8,14 +8,14 @@ import { ApiConfig } from "../hooks/useApiConfig";
 export const API_CONFIG: ApiConfig = {
   // SonarQube Configuration
   sonarqube: {
-    baseUrl: process.env.SONARQUBE_URL || "https://sonarqube.example.com",
-    token: process.env.SONARQUBE_TOKEN || "YOUR_SONARQUBE_TOKEN_HERE",
+    baseUrl: "https://sonarqube.example.com",
+    token: "YOUR_SONARQUBE_TOKEN_HERE",
   },
 
   // OWASP ZAP Configuration
   zap: {
-    baseUrl: process.env.ZAP_URL || "http://localhost:8080",
-    apiKey: process.env.ZAP_API_KEY || "YOUR_ZAP_API_KEY_HERE",
+    baseUrl: "http://localhost:8080",
+    apiKey: "YOUR_ZAP_API_KEY_HERE",
   },
 };
 
@@ -34,8 +34,5 @@ export function getApiConfig(): ApiConfig {
   return API_CONFIG;
 }
 
-// Pour utiliser en production, créez un fichier .env.local avec:
-// SONARQUBE_URL=https://votre-sonarqube.com
-// SONARQUBE_TOKEN=votre_token
-// ZAP_URL=http://votre-zap:8080
-// ZAP_API_KEY=votre_api_key
+// NOTE: Ce fichier n'est plus utilisé avec le nouveau système d'applications dynamiques
+// La configuration se fait maintenant via l'interface dans Paramètres > Applications

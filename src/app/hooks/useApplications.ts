@@ -18,8 +18,10 @@ export function useApplications() {
       const apps = await ApplicationsService.getAll();
       setApplications(apps);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur lors du chargement des applications");
+      const errorMessage = err instanceof Error ? err.message : "Erreur lors du chargement des applications";
       console.error("Erreur lors du chargement des applications:", err);
+      setError(errorMessage);
+      setApplications([]); // Set empty array on error
     } finally {
       setLoading(false);
     }

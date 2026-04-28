@@ -8,14 +8,18 @@ import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 
 export function Overview() {
-  const { applications, enabledApplications, loading } = useApplications();
+  const { applications = [], enabledApplications = [], loading } = useApplications();
 
-  const configuredApps = enabledApplications.filter((app) => ApplicationsService.isConfigured(app));
-  const unconfiguredApps = enabledApplications.filter((app) => !ApplicationsService.isConfigured(app));
+  const configuredApps = (enabledApplications || []).filter((app) => ApplicationsService.isConfigured(app));
+  const unconfiguredApps = (enabledApplications || []).filter((app) => !ApplicationsService.isConfigured(app));
 
   const getIconComponent = (iconName: string) => {
-    const Icon = (LucideIcons as any)[iconName];
-    return Icon || LucideIcons.Package;
+    try {
+      const Icon = (LucideIcons as any)[iconName];
+      return Icon || LucideIcons.Package;
+    } catch {
+      return LucideIcons.Package;
+    }
   };
 
   if (loading) {
