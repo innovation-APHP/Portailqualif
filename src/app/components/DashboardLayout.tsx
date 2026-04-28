@@ -12,21 +12,23 @@ import { ApplicationsService } from "../services/applications.service";
 export function DashboardLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { enabledApplications } = useApplications();
+  const { enabledApplications, loading } = useApplications();
 
   const getIconComponent = (iconName: string) => {
     const Icon = (LucideIcons as any)[iconName];
     return Icon || LucideIcons.Package;
   };
 
+  const appNavItems = loading ? [] : (enabledApplications || []).map((app) => ({
+    name: app.name,
+    href: `/app/${app.id}`,
+    icon: getIconComponent(app.icon),
+    externalUrl: ApplicationsService.isConfigured(app) ? app.config.baseUrl : null,
+  }));
+
   const navigation = [
     { name: "Vue d'ensemble", href: "/", icon: LayoutDashboard },
-    ...enabledApplications.map((app) => ({
-      name: app.name,
-      href: `/app/${app.id}`,
-      icon: getIconComponent(app.icon),
-      externalUrl: ApplicationsService.isConfigured(app) ? app.config.baseUrl : null,
-    })),
+    ...appNavItems,
   ];
 
   return (

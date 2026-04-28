@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Application, PREDEFINED_APPS } from "../types/application";
+import type { Application } from "../types/application";
+import { PREDEFINED_APPS } from "../types/application";
 import { useApplications } from "../hooks/useApplications";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";

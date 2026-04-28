@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Application } from "../types/application";
+import type { Application } from "../types/application";
 import { ApplicationsService } from "../services/applications.service";
 import { AlertCircle, ExternalLink, Settings } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
